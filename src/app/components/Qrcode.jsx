@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import Web3 from "web3";
 import QRCode from "qrcode.react";
-import axios from "axios";
 
 const Web3TokenTransfer = () => {
   const [connectedWallet, setConnectedWallet] = useState(null);
@@ -12,28 +11,25 @@ const Web3TokenTransfer = () => {
   const [qrCodeData, setQrCodeData] = useState(null);
 
   const checkMetaMaskInstalled = async () => {
-    if (window.ethereum) {
-      await window.ethereum.request({ method: "eth_requestAccounts" });
-      const web3 = new Web3(window.ethereum);
-
-      const chainId = await window.ethereum.request({ method: "eth_chainId" });
-      if (chainId !== "0x61") {
-        toast.error(
-          "Please switch to Binance Smart Chain Testnet (BNB) network."
-        );
-        return;
-      }
-
-      const accounts = await web3.eth.getAccounts();
-      const selectedAccount = accounts[0];
-      setConnectedWallet({ web3, selectedAccount });
-      toast.success("Wallet connected successfully!");
-    }
-  };
-
-  const connectWallet = async () => {
     try {
-      await checkMetaMaskInstalled();
+      if (window.ethereum) {
+        await window.ethereum.request({ method: "eth_requestAccounts" });
+        const web3 = new Web3(window.ethereum);
+
+        const chainId = await window.ethereum.request({
+          method: "eth_chainId",
+        });
+        if (chainId !== "0x61") {
+          throw new Error(
+            "Please switch to Binance Smart Chain Testnet (BNB) network."
+          );
+        }
+
+        const accounts = await web3.eth.getAccounts();
+        const selectedAccount = accounts[0];
+        setConnectedWallet({ web3, selectedAccount });
+        toast.success("Wallet connected successfully!");
+      }
     } catch (error) {
       if (error.code === 4001) {
         toast.error("Wallet connection request cancelled by the user.");
@@ -41,6 +37,10 @@ const Web3TokenTransfer = () => {
         toast.error(`Error connecting wallet: ${error.message}`);
       }
     }
+  };
+
+  const connectWallet = async () => {
+    await checkMetaMaskInstalled();
   };
 
   const generateQRCodeData = () => {
@@ -71,8 +71,7 @@ const Web3TokenTransfer = () => {
   const transferTokens = async () => {
     try {
       if (!connectedWallet) {
-        toast.error("Please connect your wallet first.");
-        return;
+        throw new Error("Please connect your wallet first.");
       }
 
       const { web3 } = connectedWallet;
@@ -89,8 +88,8 @@ const Web3TokenTransfer = () => {
   };
 
   return (
-    <div className="container mx-auto mt-8">
-      <div className="flex justify-center">
+    <div className="container mx-auto mt-8 p-4">
+      <div className="flex justify-center mb-4">
         <button
           className="bg-blue-500 text-white px-4 py-2 rounded-md mr-4"
           onClick={connectWallet}
@@ -105,7 +104,7 @@ const Web3TokenTransfer = () => {
         </button>
       </div>
 
-      <div className="mt-4">
+      <div className="mb-4">
         <label className="block text-gray-700">Token Amount:</label>
         <input
           type="text"
@@ -115,7 +114,7 @@ const Web3TokenTransfer = () => {
         />
       </div>
 
-      <div className="mt-4">
+      <div className="mb-4">
         <label className="block text-gray-700">Receiver Address:</label>
         <input
           type="text"
@@ -126,9 +125,9 @@ const Web3TokenTransfer = () => {
       </div>
 
       {qrCodeData && (
-        <div className="mt-4">
+        <div className="mb-4">
           <label className="block text-gray-700">QR Code:</label>
-          <QRCode value={JSON.stringify(qrCodeData)} />
+          <QRCode value={qrCodeData} />
         </div>
       )}
     </div>
