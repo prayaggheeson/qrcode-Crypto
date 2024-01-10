@@ -1,12 +1,9 @@
-import { useSearchParams } from "next/navigation";
 import { NextResponse } from "next/server";
 import Web3 from "web3";
 
-const web3 = new Web3(
-  new Web3.providers.HttpProvider(
-    "https://bnbsmartchain-testnet.infura.io/v3/ce7a8c503cf24ebb8d3caafa56f2e90e"
-  )
-);
+const infuraEndpoint = `https://rpc.ankr.com/bsc_testnet_chapel`;
+
+const web3 = new Web3(new Web3.providers.HttpProvider(infuraEndpoint));
 
 const tokenContractAddress = "0x32702946083578B514853528119Ecf2a7f0cd664";
 const tokenContractABI = [
@@ -1404,7 +1401,6 @@ const tokenContractABI = [
     stateMutability: "view",
   },
 ];
-
 const tokenContractInstance = new web3.eth.Contract(
   tokenContractABI,
   tokenContractAddress
@@ -1412,19 +1408,53 @@ const tokenContractInstance = new web3.eth.Contract(
 
 export async function POST(request) {
   try {
-    const { fromAddress, toAddress, amount } = await request.json();
-    console.log(fromAddress);
-    const transaction = await tokenContractInstance.methods
-      .transfer(toAddress, amount)
-      .send({
-        from: fromAddress,
-        gas: 2100,
-        gasPrice: 51000,
-      });
+    const requestBody = await request.text();
+    const { from, to, amount } = JSON.parse(requestBody);
 
-    const transactionHash = transaction.transactionHash;
+    if (!from || !to || !amount || isNaN(amount)) {
+      return NextResponse.json({
+        error:
+          "Invalid request. Please provide valid 'from', 'to', and 'amount'.",
+      });
+    }
+
+    const convertedAmount = web3.utils.toWei(amount.toString(), "ether");
+
+    const nonce = await web3.eth.getTransactionCount(from, "pending");
+
+    const gasPrice = await web3.eth.getGasPrice();
+    const gasLimit = await tokenContractInstance.methods
+      .transfer(to, convertedAmount)
+      .estimateGas();
+
+    const transaction = {
+      from: from,
+      to: tokenContractAddress,
+      gas: gasLimit,
+      gasPrice: gasPrice,
+      data: tokenContractInstance.methods
+        .transfer(to, convertedAmount)
+        .encodeABI(),
+      nonce: nonce,
+    };
+
+    const transactionHash = await web3.eth.sendTransaction(transaction);
+
     return NextResponse.json({ transactionHash });
   } catch (error) {
-    return NextResponse.json({ error });
+    console.error("Transaction error:", error.message);
+
+    if (error.message.includes("ERC20: transfer from the zero address")) {
+      return NextResponse.json({
+        error:
+          "Failed to transfer. Make sure the 'from' address has a balance and allowance.",
+      });
+    } else if (error.message.includes("specific error condition")) {
+      return NextResponse.json({
+        error: "Specific error message for a certain condition.",
+      });
+    } else {
+      return NextResponse.json({ error: "Transaction failed." });
+    }
   }
 }
