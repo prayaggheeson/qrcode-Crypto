@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 import Web3 from "web3";
 
-const infuraEndpoint = `https://rpc.ankr.com/bsc_testnet_chapel`;
+const infuraEndpoint = "https://binance-testnet.rpc.thirdweb.com";
 
 const web3 = new Web3(new Web3.providers.HttpProvider(infuraEndpoint));
 
-const tokenContractAddress = "0x32702946083578B514853528119Ecf2a7f0cd664";
+const tokenContractAddress = "0xE2678a381543Af153165abC3b3F88622CE315EE8";
 const tokenContractABI = [
   {
     type: "constructor",
@@ -1401,6 +1401,7 @@ const tokenContractABI = [
     stateMutability: "view",
   },
 ];
+
 const tokenContractInstance = new web3.eth.Contract(
   tokenContractABI,
   tokenContractAddress
@@ -1418,32 +1419,55 @@ export async function POST(request) {
       });
     }
 
+    // Check the balance of the sender before the transaction
+    const balanceBefore = await tokenContractInstance.methods
+      .balanceOf(from)
+      .call();
+    console.log(`Balance of ${from} before the transaction: ${balanceBefore}`);
+
     const convertedAmount = web3.utils.toWei(amount.toString(), "ether");
 
-    const nonce = await web3.eth.getTransactionCount(from, "pending");
-
-    const gasPrice = await web3.eth.getGasPrice();
-    const gasLimit = await tokenContractInstance.methods
+    const data = tokenContractInstance.methods
       .transfer(to, convertedAmount)
-      .estimateGas();
+      .encodeABI();
 
-    const transaction = {
+    const gasLimit = await web3.eth.estimateGas({
+      to: tokenContractAddress,
+      data,
+      from: from,
+    });
+
+    // Get the current nonce for the sending account
+    const nonce = await web3.eth.getTransactionCount(from);
+
+    // Build the transaction object
+    const txObject = {
       from: from,
       to: tokenContractAddress,
       gas: gasLimit,
-      gasPrice: gasPrice,
-      data: tokenContractInstance.methods
-        .transfer(to, convertedAmount)
-        .encodeABI(),
-      nonce: nonce,
+      gasPrice: web3.utils.toWei("10", "gwei"),
+      data,
+      nonce,
     };
 
-    const transactionHash = await web3.eth.sendTransaction(transaction);
+    // Sign the transaction
+    const signedTx = await web3.eth.accounts.signTransaction(
+      txObject,
+      process.env.YOUR_PRIVATE_KEY
+    );
 
-    return NextResponse.json({ transactionHash });
+    // Send the signed transaction
+    const receipt = await web3.eth.sendSignedTransaction(
+      signedTx.rawTransaction
+    );
+
+    console.log("Transaction receipt: success");
+
+    return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Transaction error:", error.message);
+    console.error("Transaction error:", error);
 
+    // Handle specific error conditions
     if (error.message.includes("ERC20: transfer from the zero address")) {
       return NextResponse.json({
         error:

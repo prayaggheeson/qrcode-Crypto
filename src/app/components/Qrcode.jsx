@@ -74,7 +74,6 @@ const Web3TokenTransfer = () => {
         throw new Error("Please connect your wallet first.");
       }
 
-      const { web3 } = connectedWallet;
       const qrCodeData = generateQRCodeData();
       const qrCodeUrl = generateQRCodeUrl(qrCodeData);
 

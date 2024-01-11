@@ -1,26 +1,27 @@
 "use client";
 import { useState } from "react";
+import axios from "axios";
 
 const PaymentPage = () => {
   const [responseData, setResponseData] = useState("");
 
   const handleTransfer = async () => {
     try {
-      const response = await fetch(`${window.origin}/api/payment`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        `${window.origin}/api/payment`,
+        {
           from: "0x94C1Da4F14178AB9c2eB2f8C8351b0B6f383CF72",
           to: "0xeF5E7910973A468541d33500D70e38bFD8a65A87",
           amount: 12,
-          gasPrice: 5100,
-          gasLimit: 2000,
-        }),
-      });
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
-      console.log(response.data || "not response");
+      console.log(response.data);
       setResponseData(response.data);
     } catch (error) {
       console.error("Error transferring tokens:", error);
