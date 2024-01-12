@@ -55,13 +55,15 @@ const Web3TokenTransfer = () => {
 
   const generateQRCodeUrl = (data) => {
     const baseUrl = `${window.origin}/payment`;
+
     const queryString = Object.entries(data)
       .map(
         ([key, value]) =>
           `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
       )
       .join("&");
-    return `${baseUrl}?params={${queryString}}`;
+
+    return `${baseUrl}?params=${encodeURIComponent(JSON.stringify(data))}`;
   };
 
   const transferTokens = async () => {
