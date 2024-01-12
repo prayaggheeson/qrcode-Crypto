@@ -1474,7 +1474,7 @@ export async function POST(request) {
         error: "Specific error message for a certain condition.",
       });
     } else {
-      return NextResponse.json({ error: "Transaction failed." });
+      return NextResponse.json({ error: "Transaction failed.", error });
     }
   }
 }
