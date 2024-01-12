@@ -1426,7 +1426,6 @@ export async function POST(request) {
     console.log(`Balance of ${from} before the transaction: ${balanceBefore}`);
 
     const convertedAmount = web3.utils.toWei(amount.toString(), "ether");
-
     const data = tokenContractInstance.methods
       .transfer(to, convertedAmount)
       .encodeABI();
@@ -1457,9 +1456,11 @@ export async function POST(request) {
       signedTx.rawTransaction
     );
 
-    console.log("Transaction receipt: success");
-
-    return NextResponse.json({ success: true });
+    if (receipt.status) {
+      return NextResponse.json({ success: true });
+    } else {
+      return NextResponse.json({ error: "Transaction failed." });
+    }
   } catch (error) {
     console.error("Transaction error:", error);
 

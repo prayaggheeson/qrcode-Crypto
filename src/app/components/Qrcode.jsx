@@ -45,15 +45,11 @@ const Web3TokenTransfer = () => {
 
   const generateQRCodeData = () => {
     const { selectedAccount } = connectedWallet;
-    const gasPrice = 51000;
-    const gasLimit = 21000;
 
     return {
       from: selectedAccount,
       to: receiverAddress,
       amount: Number(tokenAmount),
-      gasPrice: Number(gasPrice),
-      gasLimit: Number(gasLimit),
     };
   };
 
