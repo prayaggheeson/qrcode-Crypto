@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import Web3 from "web3";
 
-const infuraEndpoint = "https://binance-testnet.rpc.thirdweb.com";
+const RPCProvider =
+  "https://rpc.ankr.com/bsc_testnet_chapel/bde93791543e52b2d59d011428676123c5bfd15cd649d8d44110987769798e79";
 
-const web3 = new Web3(new Web3.providers.HttpProvider(infuraEndpoint));
+const web3 = new Web3(new Web3.providers.HttpProvider(RPCProvider));
 
 const tokenContractAddress = "0xE2678a381543Af153165abC3b3F88622CE315EE8";
 const tokenContractABI = [
