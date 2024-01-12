@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import toast from "react-hot-toast";
 import Web3 from "web3";
 import QRCode from "qrcode.react";
+import Link from "next/link";
 
 const Web3TokenTransfer = () => {
   const [connectedWallet, setConnectedWallet] = useState(null);
@@ -86,9 +87,9 @@ const Web3TokenTransfer = () => {
 
   return (
     <div className="container mx-auto mt-8 p-4">
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center space-x-4 mb-4">
         <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-md mr-4"
+          className="bg-blue-500 text-white px-4 py-2 rounded-md"
           onClick={connectWallet}
         >
           Connect Wallet
@@ -102,7 +103,7 @@ const Web3TokenTransfer = () => {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700">Token Amount:</label>
+        <label className="block text-gray-700 mb-1">Token Amount:</label>
         <input
           type="text"
           className="border border-gray-300 p-2 w-full"
@@ -112,7 +113,7 @@ const Web3TokenTransfer = () => {
       </div>
 
       <div className="mb-4">
-        <label className="block text-gray-700">Receiver Address:</label>
+        <label className="block text-gray-700 mb-1">Receiver Address:</label>
         <input
           type="text"
           className="border border-gray-300 p-2 w-full"
@@ -123,8 +124,14 @@ const Web3TokenTransfer = () => {
 
       {qrCodeData && (
         <div className="mb-4">
-          <label className="block text-gray-700">QR Code:</label>
-          <QRCode value={qrCodeData} />
+          <label className="block text-gray-700 mb-1">QR Code:</label>
+          <QRCode value={qrCodeData} size={150} />
+          <Link
+            className="hover:underline mt-2 block text-blue-500"
+            href={qrCodeData}
+          >
+            Payment Link
+          </Link>
         </div>
       )}
     </div>
