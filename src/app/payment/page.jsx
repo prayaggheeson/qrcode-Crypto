@@ -1,18 +1,37 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
+import { useSearchParams } from "next/navigation";
 
 const PaymentPage = () => {
   const [responseData, setResponseData] = useState("");
+  const searchParams = useSearchParams();
+  const [transactionData, setTransactionData] = useState(null);
+
+  useEffect(() => {
+    const paramsString = searchParams.get("params");
+
+    if (paramsString) {
+      const params = JSON.parse(decodeURIComponent(paramsString));
+      setTransactionData(params);
+    }
+  }, [searchParams]);
 
   const handleTransfer = async () => {
     try {
+      if (!transactionData) {
+        console.error("Transaction data is not available.");
+        return;
+      }
+
       const response = await axios.post(
         `${window.origin}/api/payment`,
         {
-          from: "0x94C1Da4F14178AB9c2eB2f8C8351b0B6f383CF72",
-          to: "0xeF5E7910973A468541d33500D70e38bFD8a65A87",
-          amount: 12,
+          from: transactionData.from,
+          to: transactionData.to,
+          amount: transactionData.amount,
+          gasPrice: transactionData.gasPrice,
+          gasLimit: transactionData.gasLimit,
         },
         {
           headers: {

@@ -1437,10 +1437,8 @@ export async function POST(request) {
       from: from,
     });
 
-    // Get the current nonce for the sending account
     const nonce = await web3.eth.getTransactionCount(from);
 
-    // Build the transaction object
     const txObject = {
       from: from,
       to: tokenContractAddress,
@@ -1450,13 +1448,11 @@ export async function POST(request) {
       nonce,
     };
 
-    // Sign the transaction
     const signedTx = await web3.eth.accounts.signTransaction(
       txObject,
       process.env.YOUR_PRIVATE_KEY
     );
 
-    // Send the signed transaction
     const receipt = await web3.eth.sendSignedTransaction(
       signedTx.rawTransaction
     );
@@ -1467,7 +1463,6 @@ export async function POST(request) {
   } catch (error) {
     console.error("Transaction error:", error);
 
-    // Handle specific error conditions
     if (error.message.includes("ERC20: transfer from the zero address")) {
       return NextResponse.json({
         error:
