@@ -61,7 +61,7 @@ const Web3TokenTransfer = () => {
           `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
       )
       .join("&");
-    return `${baseUrl}?${queryString}`;
+    return `${baseUrl}?params={${queryString}}`;
   };
 
   const transferTokens = async () => {
