@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import { useSearchParams } from "next/navigation";
 import toast from "react-hot-toast";
+import Link from "next/link";
 
 const PaymentPage = () => {
   const [responseData, setResponseData] = useState("");
@@ -58,17 +59,21 @@ const PaymentPage = () => {
 
       <button
         onClick={handleTransfer}
-        className="bg-blue-500 text-white px-4 py-2 rounded-md"
+        className="bg-blue-500 hover:bg-blue-800 hover:shadow-lg transition-all duration-300 ease-in-out  text-white px-4 py-2 rounded-md"
       >
         Transfer Tokens
       </button>
-
       {responseData && (
         <div className="mt-4">
           <h2 className="text-2xl font-bold mb-2">Response Data:</h2>
           <pre className="bg-gray-200 p-4 rounded">
             {JSON.stringify(responseData, null, 2)}
           </pre>
+          <div className="mt-16">
+            <h2 className="text-2xl  hover:text-blue-900 hover:underline text-start rounded-lg font-bold ">
+              <Link href="/">Home</Link>
+            </h2>
+          </div>
         </div>
       )}
     </div>

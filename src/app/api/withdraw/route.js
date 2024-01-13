@@ -1409,38 +1409,38 @@ const tokenContractInstance = new web3.eth.Contract(
 );
 
 export async function POST(request) {
+  const Body = await request.json();
+  const { fromAccount, toAccount, amount } = Body;
+  console.log(Body);
+
+  if (!fromAccount || !toAccount || !amount) {
+    return new Response("Invalid Request", { status: 400 });
+  }
+
   try {
-    const requestBody = await request.text();
-    const { from, to, amount } = JSON.parse(requestBody);
-
-    if (!from || !to || !amount || isNaN(amount)) {
-      return NextResponse.json({
-        error:
-          "Invalid request. Please provide valid 'from', 'to', and 'amount'.",
-      });
-    }
-
-    // Check the balance of the sender before the transaction
     const balanceBefore = await tokenContractInstance.methods
-      .balanceOf(from)
+      .balanceOf(fromAccount)
       .call();
-    console.log(`Balance of ${from} before the transaction: ${balanceBefore}`);
+    console.log(
+      `Balance of ${fromAccount} before the transaction: ${balanceBefore}`
+    );
 
-    const convertedAmount = web3.utils.toWei(amount.toString(), "ether");
+    const convertedAmount = web3.utils.toWei(amount, "ether");
+
     const data = tokenContractInstance.methods
-      .transfer(to, convertedAmount)
+      .transferFrom(fromAccount, toAccount, convertedAmount)
       .encodeABI();
 
     const gasLimit = await web3.eth.estimateGas({
       to: tokenContractAddress,
       data,
-      from: from,
+      from: fromAccount,
     });
 
-    const nonce = await web3.eth.getTransactionCount(from);
+    const nonce = await web3.eth.getTransactionCount(fromAccount);
 
     const txObject = {
-      from: from,
+      from: fromAccount,
       to: tokenContractAddress,
       gas: gasLimit,
       gasPrice: web3.utils.toWei("10", "gwei"),
@@ -1457,28 +1457,21 @@ export async function POST(request) {
       signedTx.rawTransaction
     );
 
+    console.log(receipt);
+
     if (receipt.status) {
-      return NextResponse.json({ success: true });
+      return NextResponse.json({ message: "Transaction successful", receipt });
     } else {
       return NextResponse.json({
-        error: "Transaction failed after receipt",
-        error,
+        message: "Transaction failed",
+        error: receipt,
       });
     }
   } catch (error) {
-    console.error("Transaction error:", error);
-
-    if (error.message.includes("ERC20: transfer from the zero address")) {
-      return NextResponse.json({
-        error:
-          "Failed to transfer. Make sure the 'from' address has a balance and allowance.",
-      });
-    } else if (error.message.includes("specific error condition")) {
-      return NextResponse.json({
-        error: "Specific error message for a certain condition.",
-      });
-    } else {
-      return NextResponse.json({ error: "Transaction failed.", error });
-    }
+    console.error("Error:", error);
+    return NextResponse.json({
+      message: "Transaction failed",
+      error: error.message,
+    });
   }
 }
