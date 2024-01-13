@@ -1,6 +1,6 @@
 let Users = [
   {
-    userName: "Admin",
+    walletAddress: "Admin",
     referralCode: "1234DA",
     referralCount: 0,
     referralIncome: 0,
@@ -47,7 +47,7 @@ export async function POST(request) {
     }
 
     // Calculate referral income
-    const referralIncome = (referralIncomePercentage / 100) * 100; // Assuming 100 as income for simplicity
+    const referralIncome = (referralIncomePercentage / 100) * 100;
 
     // Update referral count and income for the referrer
     referrer.referralCount = referralLevel;
@@ -56,19 +56,17 @@ export async function POST(request) {
     // Generate a new referral code for the new user
     const generatedReferralCode = Math.random().toString(36).substring(2, 8);
 
-    // Create a new user object
     const newUser = {
       walletAddress,
       referralCode: generatedReferralCode,
-      referralCount: 0, // New user starts at level 0
-      referralIncome: 0, // New user starts with 0 income
+      referralCount: 0,
+      referralIncome: 0,
     };
 
-    // Add the new user to the Users array
     Users.push(newUser);
 
     return new Response(
-      JSON.stringify({ newUser, message: "User Created Successfully" }),
+      JSON.stringify({ message: "User Created Successfully", Users }),
       { status: 200 }
     );
   } catch (error) {
