@@ -1,11 +1,9 @@
-let Users = [
-  {
-    walletAddress: "Admin",
-    referralCode: "1234DA",
-    referralCount: 0,
-    referralIncome: 0,
-  },
-];
+// Import required modules
+import { connectDB } from "@/app/DB/database";
+import UserModel from "@/app/models/users";
+
+// Connect to the database
+connectDB();
 
 export async function POST(request) {
   try {
@@ -13,21 +11,29 @@ export async function POST(request) {
     const { walletAddress, referralCode } = body;
 
     if (!walletAddress || !referralCode) {
-      return new Response("Missing parameters", { status: 400 });
+      return new Response(JSON.stringify({ message: "Missing parameters" }), {
+        status: 400,
+      });
     }
 
-    // Check if the referral code exists
-    const referrer = Users.find((u) => u.referralCode === referralCode);
+    // Find the referrer in the database
+    const referrer = await UserModel.findOne({ referralCode });
+
     if (!referrer) {
-      return new Response("Invalid referral code", { status: 400 });
+      return new Response(
+        JSON.stringify({ message: "Invalid referral code" }),
+        { status: 400 }
+      );
     }
 
     // Check if the wallet address already exists
-    const walletAddressExists = Users.find(
-      (u) => u.walletAddress === walletAddress
-    );
+    const walletAddressExists = await UserModel.findOne({ walletAddress });
+
     if (walletAddressExists) {
-      return new Response("Wallet address already exists", { status: 400 });
+      return new Response(
+        JSON.stringify({ message: "Wallet address already exists" }),
+        { status: 400 }
+      );
     }
 
     // Calculate referral income based on the referral level
@@ -35,42 +41,73 @@ export async function POST(request) {
     let referralIncomePercentage = 0;
 
     if (referralLevel === 1) {
-      referralIncomePercentage = 10; // Level 1: Admin gets 10%
+      referralIncomePercentage = 10;
     } else if (referralLevel === 2) {
-      referralIncomePercentage = 5; // Level 2: Referrer gets 10%, Admin gets 5%
+      referralIncomePercentage = 5;
     } else if (referralLevel === 3) {
-      referralIncomePercentage = 2; // Level 3: Referrer gets 10%, Previous Referrer gets 5%, Admin gets 2%
+      referralIncomePercentage = 2;
     } else if (referralLevel === 4) {
-      referralIncomePercentage = 1; // Level 4: Referrer gets 10%, Previous Referrer gets 5%, Previous Previous Referrer gets 2%, Admin gets 1%
+      referralIncomePercentage = 1;
     } else {
-      referralIncomePercentage = 0; // No more levels
+      referralIncomePercentage = 0;
     }
 
     // Calculate referral income
     const referralIncome = (referralIncomePercentage / 100) * 100;
 
-    // Update referral count and income for the referrer
-    referrer.referralCount = referralLevel;
-    referrer.referralIncome += referralIncome;
+    // Update referral count and income for the referrer in the database
+    await UserModel.updateOne(
+      { referralCode },
+      {
+        $set: {
+          referralCount: referralLevel,
+          referralIncome: referrer.referralIncome + referralIncome,
+        },
+      }
+    );
 
     // Generate a new referral code for the new user
     const generatedReferralCode = Math.random().toString(36).substring(2, 8);
 
-    const newUser = {
+    // Create a new user object
+    const newUser = new UserModel({
       walletAddress,
       referralCode: generatedReferralCode,
-      referralCount: 0,
-      referralIncome: 0,
-    };
+    });
 
-    Users.push(newUser);
+    // Save the new user to the database
+    await newUser.save();
 
     return new Response(
-      JSON.stringify({ message: "User Created Successfully", Users }),
+      JSON.stringify({ message: "User Created Successfully" }),
       { status: 200 }
     );
   } catch (error) {
     console.error(error);
-    return new Response("Internal server error", { status: 500 });
+    return new Response(JSON.stringify({ message: "Internal server error" }), {
+      status: 500,
+    });
+  }
+}
+
+export async function GET(request) {
+  try {
+    const walletAddress = request.headers.get("walletAddress");
+
+    // Find the user in the database
+    const user = await UserModel.findOne({ walletAddress });
+
+    if (!user) {
+      return new Response(JSON.stringify({ message: "User not found" }), {
+        status: 404,
+      });
+    }
+
+    return new Response(JSON.stringify(user), { status: 200 });
+  } catch (error) {
+    console.error(error);
+    return new Response(JSON.stringify({ message: "Internal server error" }), {
+      status: 500,
+    });
   }
 }
