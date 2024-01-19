@@ -2,11 +2,9 @@
 import { connectDB } from "@/app/DB/database";
 import UserModel from "@/app/models/users";
 
-// Connect to the database
-connectDB();
-
 export async function POST(request) {
   try {
+    await connectDB();
     const body = await request.json();
     const { walletAddress, referralCode } = body;
 
@@ -82,28 +80,6 @@ export async function POST(request) {
       JSON.stringify({ message: "User Created Successfully" }),
       { status: 200 }
     );
-  } catch (error) {
-    console.error(error);
-    return new Response(JSON.stringify({ message: "Internal server error" }), {
-      status: 500,
-    });
-  }
-}
-
-export async function GET(request) {
-  try {
-    const walletAddress = request.headers.get("walletAddress");
-
-    // Find the user in the database
-    const user = await UserModel.findOne({ walletAddress });
-
-    if (!user) {
-      return new Response(JSON.stringify({ message: "User not found" }), {
-        status: 404,
-      });
-    }
-
-    return new Response(JSON.stringify(user), { status: 200 });
   } catch (error) {
     console.error(error);
     return new Response(JSON.stringify({ message: "Internal server error" }), {

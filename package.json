@@ -9,13 +9,21 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tsparticles/engine": "^3.1.0",
+    "@tsparticles/react": "^3.0.0",
+    "@tsparticles/slim": "^3.1.0",
     "axios": "^1.6.4",
+    "clsx": "^2.1.0",
+    "framer-motion": "^10.18.0",
     "mongoose": "^8.0.4",
     "next": "14.0.4",
     "qrcode.react": "^3.1.0",
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
+    "simplex-noise": "^4.0.1",
+    "tailwind-merge": "^2.2.0",
     "web3": "^4.3.0"
   },
   "devDependencies": {
